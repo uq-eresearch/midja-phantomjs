@@ -1,0 +1,20 @@
+{
+  "name": "midja-phantomjs",
+  "version": "1.0.0",
+  "description": "saves png/pdf of graphs",
+  "main": "server.js",
+  "dependencies": {
+    "body-parser": "^1.14.1",
+    "cors": "^2.7.1",
+    "express": "^4.12.2",
+    "fs-extra": "^0.26.2",
+    "lodash": "^3.6.0",
+    "nodemon": "^1.8.1",
+    "phantom": "^0.7.2",
+    "shortid": "^2.2.4"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "start": "node server.js"
+  }
+}

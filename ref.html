@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <link href="nv.d3.css" rel="stylesheet" type="text/css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/d3/3.5.2/d3.min.js" charset="utf-8"></script>
+    <script src="nv.d3.min.js"></script>
+
+    <style>
+        text {
+            font: normal 12px Ariel;
+        }
+        svg {
+            display: block;
+        }
+        html, body, #test1, svg {
+            margin: 0px;
+            padding: 0px;
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<div id="test1" class='with-transitions'>
+    <svg></svg>
+</div>
+
+<script>
+	function clearLabels(){
+		d3.selectAll(".label").remove();
+	}		
+		
+	function showLabel(){ // make general
+		clearLabels();
+		d3.selectAll(".nv-group path")[0].forEach(function(d){
+			  var tf = d3.select(d).attr("transform");
+			  var t = d3.transform(tf).translate;
+			  t[0] = t[0] + 6;
+			  t[1] = t[1] + 3;
+			  d3.select(d.parentNode)
+				.append("text")
+				.attr("class", "label")
+				.attr("style", "font: normal 10px Arial")
+				.text(d3.select(d).data()[0][0].name)
+				.attr("transform", "translate("+t[0]+","+t[1]+")");
+				
+		});
+	}
+	
+    var chart;
+    nv.addGraph(function() {
+		// Check for scatter or discrete bar
+		
+		if (recData.modelType == "bar") {
+			chart = nv.models.discreteBarChart()
+				.color(d3.scale.category10().range())
+				.x(function(d){return d.label;})
+				.y(function(d){return d.value + (1e-10);})
+				.valueFormat(function(d){return d3.format(',.3f')(d);})
+				.duration(500)
+				.width(1000)
+				.height(1000)
+				//.showLegend(false)
+				.showValues(true)
+				.forceY([0, 1]);
+			chart.yAxis.axisLabel("Adjusted R-square").axisLabelDistance(-10);
+			chart.xAxis.tickPadding(10);
+
+			chart.dispatch.on('renderEnd', function(){
+			
+			});						
+			
+		} else {
+			chart = nv.models.scatterChart()
+				.color(d3.scale.category10().range())
+				.duration(300)
+				.width(1000)
+				.height(1000)
+				.showLegend(recData.useRemoteness)
+			;
+			chart.dispatch.on('renderEnd', function(){
+				if (recData.labelLocations) {
+					showLabel();
+				}
+			});
+			if (recData.xlabel != null) {
+				chart.xAxis.axisLabel(recData.xlabel).ticks(10); //tickFormat(d3.format('.02f'))
+				chart.yAxis.axisLabel(recData.ylabel).ticks(10);		
+			} else {
+				chart.xAxis.axisLabel(recData.indepVarLabels[0]).ticks(10); //TODO: FIX ME
+				chart.yAxis.axisLabel(recData.depLabel).ticks(10);			
+			}		
+		}
+
+        d3.select('#test1 svg')
+            .datum(recData.raw)
+            .call(chart);
+        nv.utils.windowResize(chart.update);
+        chart.dispatch.on('stateChange', function(e) { ('New State:', JSON.stringify(e)); });
+        return chart;
+    });
