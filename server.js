@@ -21,24 +21,29 @@ app.post('/receive', function(request, respond) {
 	var newFN = shortid.generate();
 	var body = "var recData = " + JSON.stringify(request.body) + ";if(recData.labelLocations == true) {showLabel();}</script></body></html>";
 	var newFNE = newFN + "." + request.body["fileType"];
-    	filePath = __dirname + '/public/' + newFN + ".html";
+	var filePath = __dirname + '/public/' + newFN + ".html";
 	fs.copySync(__dirname + '/ref.html', filePath);
 	fs.appendFile(filePath, body, function() {
 		file = __dirname + "/public/" + newFNE;
-		phantom.create("--ssl-protocol=any", function(ph) {
-			return ph.createPage(function(page) {
-				page.set('viewportSize', {width:1100,height:1100});
-				return page.open("http://localhost:3333/public/" + newFN + ".html", function(status) {
-					setTimeout(function () {
-						page.render(file);
-						ph.exit();
-						setTimeout(function () {
-							respond.send("public/" + newFNE);
-						}, 1000);						
-					}, 3000);
-				});
+		(async function() {
+			const instance = await phantom.create(["--ssl-protocol=any"]);
+			const page = await instance.createPage();
+			await page.property('viewportSize', {width:1100,height:1100});
+			const status = await page.open("http://localhost:3333/public/" + newFN + ".html");
+			await new Promise(resolve => {
+				setTimeout(() => {
+					resolve("");
+				}, 3000);
 			});
-		});
+			await page.render(file);
+			await new Promise(resolve => {
+				setTimeout(() => {
+					resolve("");
+				}, 1000);
+			});
+			respond.send("public/" + newFNE);
+			await instance.exit();
+		})();
 	});
 });
 
